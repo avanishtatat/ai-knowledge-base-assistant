@@ -47,30 +47,43 @@ export function LoginPage() {
         <p className="mt-2 text-sm text-slate-600">Access your knowledge base.</p>
 
         <form className="mt-8 space-y-5" onSubmit={handleSubmit}>
-          <label className="block text-sm font-medium text-slate-700">
-            Email
+          <div>
+            <label
+              className="block text-sm font-medium text-slate-700"
+              htmlFor="login-email"
+            >
+              Email
+            </label>
             <input
+              id="login-email"
               className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-slate-50"
               type="email"
               name="email"
+              placeholder="name@example.com"
               autoComplete="email"
               required
               disabled={isSubmitting}
             />
-          </label>
+          </div>
 
-          <label className="block text-sm font-medium text-slate-700">
-            Password
+          <div>
+            <label
+              className="block text-sm font-medium text-slate-700"
+              htmlFor="login-password"
+            >
+              Password
+            </label>
             <input
+              id="login-password"
               className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-slate-50"
               type="password"
               name="password"
+              placeholder="Enter your password"
               autoComplete="current-password"
-              minLength={6}
               required
               disabled={isSubmitting}
             />
-          </label>
+          </div>
 
           <button
             className="w-full rounded-lg bg-blue-600 px-4 py-2.5 font-medium text-white hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
