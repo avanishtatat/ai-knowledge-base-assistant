@@ -1,92 +1,92 @@
-import { useEffect, useState } from 'react'
-import { FileText, Files, MessageCircleQuestion } from 'lucide-react'
-import { Link } from 'react-router-dom'
-import { getDashboardData } from '../api/dashboard.api'
-import type { DashboardData } from '../types/dashboard'
+import { useEffect, useState } from "react";
+import { FileText, Files, MessageCircleQuestion } from "lucide-react";
+import { Link } from "react-router-dom";
+import { getDashboardData } from "../api/dashboard.api";
+import type { DashboardData } from "../types/dashboard";
 
 function formatFileSize(bytes: number): string {
   if (bytes === 0) {
-    return '0 B'
+    return "0 B";
   }
 
-  const units = ['B', 'KB', 'MB', 'GB']
+  const units = ["B", "KB", "MB", "GB"];
   const unitIndex = Math.min(
     Math.floor(Math.log(bytes) / Math.log(1024)),
     units.length - 1,
-  )
-  const value = bytes / 1024 ** unitIndex
+  );
+  const value = bytes / 1024 ** unitIndex;
 
-  return `${value >= 10 || unitIndex === 0 ? value.toFixed(0) : value.toFixed(1)} ${units[unitIndex]}`
+  return `${value >= 10 || unitIndex === 0 ? value.toFixed(0) : value.toFixed(1)} ${units[unitIndex]}`;
 }
 
 function formatDate(value: string): string {
-  const date = new Date(value)
+  const date = new Date(value);
 
   if (Number.isNaN(date.getTime())) {
-    return 'Unknown date'
+    return "Unknown date";
   }
 
   return new Intl.DateTimeFormat(undefined, {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  }).format(date)
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  }).format(date);
 }
 
 function getReadableFileType(mimeType: string, fileName: string): string {
   const knownTypes: Record<string, string> = {
-    'application/pdf': 'PDF document',
-    'application/msword': 'Word document',
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
-      'Word document',
-    'text/plain': 'Text document',
-  }
+    "application/pdf": "PDF document",
+    "application/msword": "Word document",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+      "Word document",
+    "text/plain": "Text document",
+  };
 
   if (knownTypes[mimeType]) {
-    return knownTypes[mimeType]
+    return knownTypes[mimeType];
   }
 
-  const extension = fileName.split('.').pop()
+  const extension = fileName.split(".").pop();
   return extension && extension !== fileName
     ? `${extension.toUpperCase()} file`
-    : 'Document'
+    : "Document";
 }
 
 export function DashboardPage() {
   const [reloadKey, setReloadKey] = useState<number>(0);
-  const [dashboard, setDashboard] = useState<DashboardData | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [dashboard, setDashboard] = useState<DashboardData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-  let isActive = true
+    let isActive = true;
 
-  const loadDashboard = async () => {
-    try {
-      setIsLoading(true)
+    const loadDashboard = async () => {
+      try {
+        setIsLoading(true);
 
-      const dashboard = await getDashboardData()
+        const dashboard = await getDashboardData();
 
-      if (isActive) {
-        setDashboard(dashboard)
+        if (isActive) {
+          setDashboard(dashboard);
+        }
+      } catch {
+        if (isActive) {
+          setError("Unable to load your dashboard. Please try again.");
+        }
+      } finally {
+        if (isActive) {
+          setIsLoading(false);
+        }
       }
-    } catch {
-      if (isActive) {
-        setError('Unable to load your dashboard. Please try again.')
-      }
-    } finally {
-      if (isActive) {
-        setIsLoading(false)
-      }
-    }
-  }
+    };
 
-  void loadDashboard()
+    void loadDashboard();
 
-  return () => {
-    isActive = false
-  }
-}, [reloadKey])
+    return () => {
+      isActive = false;
+    };
+  }, [reloadKey]);
 
   return (
     <div className="mx-auto max-w-7xl">
@@ -120,11 +120,16 @@ export function DashboardPage() {
 
       {!isLoading && !error && dashboard && (
         <>
-          <section className="mt-8 grid gap-4 sm:grid-cols-2" aria-label="Knowledge base statistics">
+          <section
+            className="mt-8 grid gap-4 sm:grid-cols-2"
+            aria-label="Knowledge base statistics"
+          >
             <article className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-slate-600">Total Documents</p>
+                  <p className="text-sm font-medium text-slate-600">
+                    Total Documents
+                  </p>
                   <p className="mt-2 text-3xl font-semibold text-slate-900">
                     {dashboard.totalDocuments.toLocaleString()}
                   </p>
@@ -138,13 +143,18 @@ export function DashboardPage() {
             <article className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-slate-600">Total Questions</p>
+                  <p className="text-sm font-medium text-slate-600">
+                    Total Questions
+                  </p>
                   <p className="mt-2 text-3xl font-semibold text-slate-900">
                     {dashboard.totalQuestions.toLocaleString()}
                   </p>
                 </div>
                 <div className="rounded-lg bg-violet-50 p-3 text-violet-700">
-                  <MessageCircleQuestion className="size-6" aria-hidden="true" />
+                  <MessageCircleQuestion
+                    className="size-6"
+                    aria-hidden="true"
+                  />
                 </div>
               </div>
             </article>
@@ -152,12 +162,16 @@ export function DashboardPage() {
 
           <section className="mt-8 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
             <div className="border-b border-slate-200 px-5 py-4 sm:px-6">
-              <h2 className="text-lg font-semibold text-slate-900">Recent Documents</h2>
+              <h2 className="text-lg font-semibold text-slate-900">
+                Recent Documents
+              </h2>
             </div>
 
             {dashboard.recentDocuments.length === 0 ? (
               <div className="p-8 text-center">
-                <p className="text-sm text-slate-600">No documents uploaded yet.</p>
+                <p className="text-sm text-slate-600">
+                  No documents uploaded yet.
+                </p>
                 <Link
                   className="mt-3 inline-block text-sm font-medium text-blue-600 hover:text-blue-700"
                   to="/documents"
@@ -181,7 +195,12 @@ export function DashboardPage() {
                           {document.originalName}
                         </p>
                         <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-500">
-                          <span>{getReadableFileType(document.mimeType, document.originalName)}</span>
+                          <span>
+                            {getReadableFileType(
+                              document.mimeType,
+                              document.originalName,
+                            )}
+                          </span>
                           <span aria-hidden="true">•</span>
                           <span>{formatFileSize(document.size)}</span>
                           <span aria-hidden="true">•</span>
@@ -209,5 +228,5 @@ export function DashboardPage() {
         </>
       )}
     </div>
-  )
+  );
 }
