@@ -40,7 +40,7 @@ export const env = {
     mongodbUri: getRequiredEnv('MONGODB_URI'),
 
     jwtSecret: getRequiredEnv('JWT_SECRET'),
-    jwtExpiresIn: process.env.JWT_EXPIRES_IN?.trim() || '7d',
+    jwtExpiresIn: getRequiredEnv('JWT_EXPIRES_IN'),
 
     geminiApiKey: process.env.GEMINI_API_KEY?.trim() || '',
     geminiGenerationModel: process.env.GEMINI_GENERATION_MODEL?.trim() || '',
