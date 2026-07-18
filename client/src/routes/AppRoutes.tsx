@@ -1,15 +1,12 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { AppLayout } from '../layouts/AppLayout'
 import { AskQuestionPage } from '../pages/AskQuestionPage'
+import { ConversationsPage } from '../pages/ConversationsPage'
 import { DashboardPage } from '../pages/DashboardPage'
 import { DocumentsPage } from '../pages/DocumentsPage'
 import { LoginPage } from '../pages/LoginPage'
 import { RegisterPage } from '../pages/RegisterPage'
 import { ProtectedRoute } from './ProtectedRoute'
-
-function Placeholder({ title }: { title: string }) {
-  return <h1 className="text-2xl font-semibold text-slate-900">{title}</h1>
-}
 
 export function AppRoutes() {
   return (
@@ -28,7 +25,7 @@ export function AppRoutes() {
             />
             <Route
               path="/conversations"
-              element={<Placeholder title="Conversations" />}
+              element={<ConversationsPage />}
             />
           </Route>
         </Route>
