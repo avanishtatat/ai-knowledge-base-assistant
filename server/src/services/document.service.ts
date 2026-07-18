@@ -1,4 +1,3 @@
-import { unlink } from "node:fs/promises";
 import type {
   HydratedDocument,
   Types,
@@ -13,33 +12,13 @@ import { generateEmbeddings } from "./embedding.service.js";
 import { extractAndSaveText } from "../utils/textExtractor.js";
 import { splitTextIntoChunks } from "../utils/textSplitter.js";
 import { ApiError } from "../utils/ApiError.js";
+import { safelyDeleteFile } from "../utils/fileCleanup.js";
 
 interface ProcessUploadedDocumentInput {
   ownerId: Types.ObjectId | string;
   file: Express.Multer.File;
 }
 
-async function safelyDeleteFile(
-  filePath?: string,
-): Promise<void> {
-  if (!filePath) {
-    return;
-  }
-
-  try {
-    await unlink(filePath);
-  } catch (error) {
-    const nodeError =
-      error as NodeJS.ErrnoException;
-
-    if (nodeError.code !== "ENOENT") {
-      console.error(
-        `Unable to delete file: ${filePath}`,
-        error,
-      );
-    }
-  }
-}
 
 export async function processUploadedDocument({
   ownerId,

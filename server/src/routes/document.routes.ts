@@ -1,18 +1,31 @@
 import { Router } from "express";
 
-import { uploadDocument } from "../controllers/document.controller.js";
-import { authenticate } from "../middleware/auth.middleware.js";
 import {
-  uploadDocumentFile,
-} from "../middleware/upload.middleware.js";
+  getDocument,
+  listDocuments,
+  removeDocument,
+  uploadDocument,
+} from "../controllers/document.controller.js";
+import { authenticate } from "../middleware/auth.middleware.js";
+import { uploadDocumentFile } from "../middleware/upload.middleware.js";
 
 const router = Router();
 
+router.use(authenticate);
+
 router.post(
   "/upload",
-  authenticate,
   uploadDocumentFile.single("document"),
   uploadDocument,
+);
+
+router.get("/", listDocuments);
+
+router.get("/:documentId", getDocument);
+
+router.delete(
+  "/:documentId",
+  removeDocument,
 );
 
 export default router;
