@@ -1,56 +1,14 @@
 import { useState, type FormEvent } from 'react'
-import axios from 'axios'
 import { ArrowLeft, Bot, FileText, Send, UserRound } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { Link, useLocation, useParams } from 'react-router-dom'
 import { askDocumentQuestion } from '../api/questions.api'
 import type { QuestionAnswer } from '../types/question'
-
-interface ErrorResponse {
-  message?: string
-  details?: unknown
-}
+import { getApiErrorMessage } from '../utils/apiError'
+import { formatDateTime } from '../utils/formatting'
 
 interface AskQuestionLocationState {
   documentName?: unknown
-}
-
-function formatDate(value: string): string {
-  const date = new Date(value)
-
-  if (Number.isNaN(date.getTime())) {
-    return 'Unknown date'
-  }
-
-  return new Intl.DateTimeFormat(undefined, {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  }).format(date)
-}
-
-function getErrorMessage(error: unknown): string {
-  const fallback = 'Unable to answer the question. Please try again.'
-
-  if (!axios.isAxiosError<ErrorResponse>(error)) {
-    return fallback
-  }
-
-  const response = error.response?.data
-
-  if (Array.isArray(response?.details)) {
-    const firstDetail = response.details[0]
-
-    if (
-      typeof firstDetail === 'object' &&
-      firstDetail !== null &&
-      'msg' in firstDetail &&
-      typeof firstDetail.msg === 'string'
-    ) {
-      return firstDetail.msg
-    }
-  }
-
-  return response?.message ?? fallback
 }
 
 export function AskQuestionPage() {
@@ -112,7 +70,12 @@ export function AskQuestionPage() {
       setQuestion('')
       toast.success('Answer generated')
     } catch (error) {
-      toast.error(getErrorMessage(error))
+      toast.error(
+        getApiErrorMessage(
+          error,
+          'Unable to answer the question. Please try again.',
+        ),
+      )
     } finally {
       setIsSubmitting(false)
     }
@@ -218,7 +181,9 @@ export function AskQuestionPage() {
                       <div className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-500">
                         <span>{item.document.title}</span>
                         <span aria-hidden="true">•</span>
-                        <time dateTime={item.createdAt}>{formatDate(item.createdAt)}</time>
+                        <time dateTime={item.createdAt}>
+                          {formatDateTime(item.createdAt)}
+                        </time>
                       </div>
                     </div>
                   </div>

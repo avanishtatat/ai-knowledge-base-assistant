@@ -5,13 +5,13 @@ import {
   type ChangeEvent,
   type FormEvent,
 } from "react";
-import axios from "axios";
 import {
   FileText,
   MessageCircleQuestion,
-  RefreshCw,
+  Search,
   Trash2,
   Upload,
+  X,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { Link } from "react-router-dom";
@@ -20,57 +20,16 @@ import {
   getDocuments,
   uploadDocument,
 } from "../api/documents.api";
+import { EmptyState } from "../components/feedback/EmptyState";
+import { ErrorState } from "../components/feedback/ErrorState";
+import { LoadingState } from "../components/feedback/LoadingState";
 import type { Document } from "../types/document";
-
-interface ErrorResponse {
-  message?: string;
-}
-
-function formatFileSize(bytes: number): string {
-  if (bytes === 0) {
-    return "0 B";
-  }
-
-  const units = ["B", "KB", "MB", "GB"];
-  const unitIndex = Math.min(
-    Math.floor(Math.log(bytes) / Math.log(1024)),
-    units.length - 1,
-  );
-  const value = bytes / 1024 ** unitIndex;
-
-  return `${value >= 10 || unitIndex === 0 ? value.toFixed(0) : value.toFixed(1)} ${units[unitIndex]}`;
-}
-
-function formatDate(value: string): string {
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return "Unknown date";
-  }
-
-  return new Intl.DateTimeFormat(undefined, {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  }).format(date);
-}
-
-function getReadableFileType(mimeType: string, fileName: string): string {
-  const fileTypes: Record<string, string> = {
-    "application/pdf": "PDF document",
-    "text/markdown": "Markdown document",
-    "text/plain": "Text document",
-  };
-
-  if (fileTypes[mimeType]) {
-    return fileTypes[mimeType];
-  }
-
-  const extension = fileName.split(".").pop();
-  return extension && extension !== fileName
-    ? `${extension.toUpperCase()} file`
-    : "Document";
-}
+import { getApiErrorMessage } from "../utils/apiError";
+import {
+  formatDate,
+  formatFileSize,
+  getReadableFileType,
+} from "../utils/formatting";
 
 function getStatusClasses(status: string): string {
   switch (status.toLowerCase()) {
@@ -90,18 +49,11 @@ function isSupportedFile(file: File): boolean {
   return [".pdf", ".md", ".txt"].includes(extension);
 }
 
-function getErrorMessage(error: unknown, fallback: string): string {
-  if (axios.isAxiosError<ErrorResponse>(error)) {
-    return error.response?.data.message ?? fallback;
-  }
-
-  return fallback;
-}
-
 export function DocumentsPage() {
   const [reloadKey, setReloadKey] = useState<number>(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [documents, setDocuments] = useState<Document[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
@@ -109,6 +61,10 @@ export function DocumentsPage() {
     null,
   );
   const [error, setError] = useState<string | null>(null);
+  const normalizedSearchTerm = searchTerm.trim().toLowerCase();
+  const filteredDocuments = documents.filter((document) =>
+    document.originalName.toLowerCase().includes(normalizedSearchTerm),
+  );
 
   useEffect(() => {
     let isActive = true;
@@ -181,7 +137,7 @@ export function DocumentsPage() {
       setReloadKey((current) => current + 1);
     } catch (uploadError) {
       toast.error(
-        getErrorMessage(
+        getApiErrorMessage(
           uploadError,
           "Unable to upload the document. Please try again.",
         ),
@@ -212,7 +168,7 @@ export function DocumentsPage() {
       setReloadKey((current) => current + 1);
     } catch (deleteError) {
       toast.error(
-        getErrorMessage(
+        getApiErrorMessage(
           deleteError,
           "Unable to delete the document. Please try again.",
         ),
@@ -280,38 +236,60 @@ export function DocumentsPage() {
           <h2 className="text-lg font-semibold text-slate-900">
             Your documents
           </h2>
+          <div className="relative mt-4 max-w-md">
+            <Search
+              className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400"
+              aria-hidden="true"
+            />
+            <input
+              type="search"
+              className="w-full rounded-lg border border-slate-300 py-2.5 pl-9 pr-10 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              aria-label="Search documents by filename"
+              placeholder="Search documents by filename"
+              value={searchTerm}
+              onChange={(event) => setSearchTerm(event.target.value)}
+            />
+            {searchTerm && (
+              <button
+                type="button"
+                className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                aria-label="Clear document search"
+                onClick={() => setSearchTerm("")}
+              >
+                <X className="size-4" aria-hidden="true" />
+              </button>
+            )}
+          </div>
         </div>
 
         {isLoading && (
-          <div className="p-8 text-center text-sm text-slate-600">
-            Loading documents…
-          </div>
+          <LoadingState message="Loading documents…" />
         )}
 
         {!isLoading && error && (
-          <div className="p-8 text-center">
-            <p className="text-sm text-red-700">{error}</p>
-            <button
-              type="button"
-              className="mt-4 inline-flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
-              onClick={() => setReloadKey((current) => current + 1)}
-            >
-              <RefreshCw className="size-4" aria-hidden="true" />
-              Retry
-            </button>
-          </div>
+          <ErrorState
+            message={error}
+            onRetry={() => setReloadKey((current) => current + 1)}
+          />
         )}
 
         {!isLoading && !error && documents.length === 0 && (
-          <div className="p-8 text-center text-sm text-slate-600">
-            No documents yet. Upload your first document to start building your
-            knowledge base.
-          </div>
+          <EmptyState
+            message="No documents yet."
+            description="Upload your first document to start building your knowledge base."
+          />
         )}
 
-        {!isLoading && !error && documents.length > 0 && (
+        {!isLoading &&
+          !error &&
+          documents.length > 0 &&
+          filteredDocuments.length === 0 && (
+            <EmptyState message="No documents match your search." />
+          )}
+
+        {!isLoading && !error && filteredDocuments.length > 0 && (
           <ul className="divide-y divide-slate-200">
-            {documents.map((document) => {
+            {filteredDocuments.map((document) => {
               const isReady = document.status.toLowerCase() === "ready";
               const isDeleting = deletingDocumentId === document.id;
 

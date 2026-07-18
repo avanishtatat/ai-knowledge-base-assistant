@@ -1,10 +1,9 @@
 import { useState, type FormEvent } from 'react'
-import axios from 'axios'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { login as loginRequest } from '../api/auth.api'
 import { useAuth } from '../hooks/useAuth'
-import type { ApiResponse } from '../types/api'
+import { getApiErrorMessage } from '../utils/apiError'
 
 export function LoginPage() {
   const navigate = useNavigate()
@@ -35,10 +34,7 @@ export function LoginPage() {
       toast.success('Welcome back')
       navigate('/dashboard', { replace: true })
     } catch (error) {
-      const message = axios.isAxiosError<ApiResponse<unknown>>(error)
-        ? error.response?.data.message
-        : undefined
-      toast.error(message ?? 'Unable to sign in. Please try again.')
+      toast.error(getApiErrorMessage(error, 'Unable to sign in. Please try again.'))
     } finally {
       setIsSubmitting(false)
     }
@@ -54,7 +50,7 @@ export function LoginPage() {
           <label className="block text-sm font-medium text-slate-700">
             Email
             <input
-              className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-slate-50"
               type="email"
               name="email"
               autoComplete="email"
@@ -66,7 +62,7 @@ export function LoginPage() {
           <label className="block text-sm font-medium text-slate-700">
             Password
             <input
-              className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-slate-50"
               type="password"
               name="password"
               autoComplete="current-password"
@@ -77,7 +73,7 @@ export function LoginPage() {
           </label>
 
           <button
-            className="w-full rounded-lg bg-blue-600 px-4 py-2.5 font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+            className="w-full rounded-lg bg-blue-600 px-4 py-2.5 font-medium text-white hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
             type="submit"
             disabled={isSubmitting}
           >

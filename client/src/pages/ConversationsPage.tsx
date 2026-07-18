@@ -5,30 +5,30 @@ import {
   FileText,
   MessageSquareText,
   RefreshCw,
+  Search,
   UserRound,
+  X,
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { getConversations } from '../api/conversations.api'
+import { EmptyState } from '../components/feedback/EmptyState'
+import { ErrorState } from '../components/feedback/ErrorState'
+import { LoadingState } from '../components/feedback/LoadingState'
 import type { Conversation } from '../types/conversation'
-
-function formatDate(value: string): string {
-  const date = new Date(value)
-
-  if (Number.isNaN(date.getTime())) {
-    return 'Unknown date'
-  }
-
-  return new Intl.DateTimeFormat(undefined, {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  }).format(date)
-}
+import { formatDateTime } from '../utils/formatting'
 
 export function ConversationsPage() {
   const [conversations, setConversations] = useState<Conversation[]>([])
+  const [searchTerm, setSearchTerm] = useState('')
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [reloadKey, setReloadKey] = useState(0)
+  const normalizedSearchTerm = searchTerm.trim().toLowerCase()
+  const filteredConversations = conversations.filter(
+    (conversation) =>
+      conversation.question.toLowerCase().includes(normalizedSearchTerm) ||
+      conversation.documentTitle.toLowerCase().includes(normalizedSearchTerm),
+  )
 
   useEffect(() => {
     let isActive = true
@@ -83,35 +83,53 @@ export function ConversationsPage() {
         </button>
       </div>
 
+      <div className="relative mt-8 max-w-md">
+        <Search
+          className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400"
+          aria-hidden="true"
+        />
+        <input
+          type="search"
+          className="w-full rounded-lg border border-slate-300 bg-white py-2.5 pl-9 pr-10 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+          aria-label="Search conversations by question or document"
+          placeholder="Search questions or documents"
+          value={searchTerm}
+          onChange={(event) => setSearchTerm(event.target.value)}
+        />
+        {searchTerm && (
+          <button
+            type="button"
+            className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+            aria-label="Clear conversation search"
+            onClick={() => setSearchTerm('')}
+          >
+            <X className="size-4" aria-hidden="true" />
+          </button>
+        )}
+      </div>
+
       {isLoading && (
-        <div className="mt-8 rounded-xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-600">
-          Loading conversation history…
+        <div className="mt-6">
+          <LoadingState message="Loading conversation history…" />
         </div>
       )}
 
       {!isLoading && error && (
-        <div className="mt-8 rounded-xl border border-red-200 bg-red-50 p-6">
-          <p className="text-sm text-red-700">{error}</p>
-          <button
-            type="button"
-            className="mt-4 inline-flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
-            onClick={() => setReloadKey((value) => value + 1)}
-          >
-            <RefreshCw className="size-4" aria-hidden="true" />
-            Retry
-          </button>
+        <div className="mt-6">
+          <ErrorState
+            message={error}
+            onRetry={() => setReloadKey((value) => value + 1)}
+          />
         </div>
       )}
 
       {!isLoading && !error && conversations.length === 0 && (
-        <div className="mt-8 rounded-xl border border-slate-200 bg-white p-8 text-center">
+        <div className="mt-6">
+          <EmptyState message="No conversations yet.">
           <MessageSquareText
-            className="mx-auto size-7 text-slate-400"
+            className="mx-auto mt-3 size-7 text-slate-400"
             aria-hidden="true"
           />
-          <p className="mt-3 text-sm font-medium text-slate-900">
-            No conversations yet.
-          </p>
           <Link
             className="mt-3 inline-flex items-center gap-2 text-sm font-medium text-blue-600 hover:text-blue-700"
             to="/documents"
@@ -119,12 +137,22 @@ export function ConversationsPage() {
             Select a document and ask a question
             <ArrowRight className="size-4" aria-hidden="true" />
           </Link>
+          </EmptyState>
         </div>
       )}
 
-      {!isLoading && !error && conversations.length > 0 && (
-        <ol className="mt-8 space-y-6">
-          {conversations.map((conversation) => (
+      {!isLoading &&
+        !error &&
+        conversations.length > 0 &&
+        filteredConversations.length === 0 && (
+          <div className="mt-6">
+            <EmptyState message="No conversations match your search." />
+          </div>
+        )}
+
+      {!isLoading && !error && filteredConversations.length > 0 && (
+        <ol className="mt-6 space-y-6">
+          {filteredConversations.map((conversation) => (
             <li
               key={conversation.id}
               className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm"
@@ -142,7 +170,7 @@ export function ConversationsPage() {
                     className="text-xs text-slate-500"
                     dateTime={conversation.createdAt}
                   >
-                    {formatDate(conversation.createdAt)}
+                    {formatDateTime(conversation.createdAt)}
                   </time>
                   {conversation.document ? (
                     <Link

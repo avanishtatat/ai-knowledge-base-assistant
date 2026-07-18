@@ -2,55 +2,15 @@ import { useEffect, useState } from "react";
 import { FileText, Files, MessageCircleQuestion } from "lucide-react";
 import { Link } from "react-router-dom";
 import { getDashboardData } from "../api/dashboard.api";
+import { EmptyState } from "../components/feedback/EmptyState";
+import { ErrorState } from "../components/feedback/ErrorState";
+import { LoadingState } from "../components/feedback/LoadingState";
 import type { DashboardData } from "../types/dashboard";
-
-function formatFileSize(bytes: number): string {
-  if (bytes === 0) {
-    return "0 B";
-  }
-
-  const units = ["B", "KB", "MB", "GB"];
-  const unitIndex = Math.min(
-    Math.floor(Math.log(bytes) / Math.log(1024)),
-    units.length - 1,
-  );
-  const value = bytes / 1024 ** unitIndex;
-
-  return `${value >= 10 || unitIndex === 0 ? value.toFixed(0) : value.toFixed(1)} ${units[unitIndex]}`;
-}
-
-function formatDate(value: string): string {
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return "Unknown date";
-  }
-
-  return new Intl.DateTimeFormat(undefined, {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  }).format(date);
-}
-
-function getReadableFileType(mimeType: string, fileName: string): string {
-  const knownTypes: Record<string, string> = {
-    "application/pdf": "PDF document",
-    "application/msword": "Word document",
-    "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
-      "Word document",
-    "text/plain": "Text document",
-  };
-
-  if (knownTypes[mimeType]) {
-    return knownTypes[mimeType];
-  }
-
-  const extension = fileName.split(".").pop();
-  return extension && extension !== fileName
-    ? `${extension.toUpperCase()} file`
-    : "Document";
-}
+import {
+  formatDate,
+  formatFileSize,
+  getReadableFileType,
+} from "../utils/formatting";
 
 export function DashboardPage() {
   const [reloadKey, setReloadKey] = useState<number>(0);
@@ -100,21 +60,17 @@ export function DashboardPage() {
       </div>
 
       {isLoading && (
-        <div className="mt-8 rounded-xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-600">
-          Loading dashboard…
+        <div className="mt-8">
+          <LoadingState message="Loading dashboard…" />
         </div>
       )}
 
       {!isLoading && error && (
-        <div className="mt-8 rounded-xl border border-red-200 bg-red-50 p-6">
-          <p className="text-sm text-red-700">{error}</p>
-          <button
-            type="button"
-            className="mt-4 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
-            onClick={() => setReloadKey((value) => value + 1)}
-          >
-            Retry
-          </button>
+        <div className="mt-8">
+          <ErrorState
+            message={error}
+            onRetry={() => setReloadKey((value) => value + 1)}
+          />
         </div>
       )}
 
@@ -168,17 +124,14 @@ export function DashboardPage() {
             </div>
 
             {dashboard.recentDocuments.length === 0 ? (
-              <div className="p-8 text-center">
-                <p className="text-sm text-slate-600">
-                  No documents uploaded yet.
-                </p>
+              <EmptyState message="No documents uploaded yet.">
                 <Link
                   className="mt-3 inline-block text-sm font-medium text-blue-600 hover:text-blue-700"
                   to="/documents"
                 >
                   Go to documents
                 </Link>
-              </div>
+              </EmptyState>
             ) : (
               <ul className="divide-y divide-slate-200">
                 {dashboard.recentDocuments.map((document) => (
