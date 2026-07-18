@@ -9,7 +9,10 @@ import type {
 export async function getDocuments(): Promise<Document[]> {
   const response = await apiClient.get<ApiResponse<DocumentsData>>('/documents')
 
-  return response.data.data.documents
+  return response.data.data.documents.map(({ _id, ...document }) => ({
+    ...document,
+    id: _id,
+  }))
 }
 
 export async function uploadDocument(file: File): Promise<Document> {

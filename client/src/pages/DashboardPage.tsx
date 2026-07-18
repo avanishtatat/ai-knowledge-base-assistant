@@ -216,6 +216,7 @@ export function DashboardPage() {
                       <Link
                         className="whitespace-nowrap text-sm font-medium text-blue-600 hover:text-blue-700"
                         to={`/documents/${document.id}/ask`}
+                        state={{ documentName: document.originalName }}
                       >
                         Ask Question
                       </Link>

@@ -1,5 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { AppLayout } from '../layouts/AppLayout'
+import { AskQuestionPage } from '../pages/AskQuestionPage'
 import { DashboardPage } from '../pages/DashboardPage'
 import { DocumentsPage } from '../pages/DocumentsPage'
 import { LoginPage } from '../pages/LoginPage'
@@ -23,7 +24,7 @@ export function AppRoutes() {
             <Route path="/documents" element={<DocumentsPage />} />
             <Route
               path="/documents/:documentId/ask"
-              element={<Placeholder title="Ask a document" />}
+              element={<AskQuestionPage />}
             />
             <Route
               path="/conversations"

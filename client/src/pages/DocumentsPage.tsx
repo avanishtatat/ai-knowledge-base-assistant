@@ -354,6 +354,7 @@ export function DocumentsPage() {
                       <Link
                         className="inline-flex items-center gap-1.5 text-sm font-medium text-blue-600 hover:text-blue-700"
                         to={`/documents/${document.id}/ask`}
+                        state={{ documentName: document.originalName }}
                       >
                         <MessageCircleQuestion
                           className="size-4"

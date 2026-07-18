@@ -8,7 +8,7 @@ export interface Document {
 }
 
 export interface DocumentsData {
-  documents: Document[]
+  documents: Array<Omit<Document, 'id'> & { _id: string }>
 }
 
 export interface UploadedDocumentData {
