@@ -1,10 +1,11 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+import { AppLayout } from '../layouts/AppLayout'
 import { LoginPage } from '../pages/LoginPage'
 import { RegisterPage } from '../pages/RegisterPage'
 import { ProtectedRoute } from './ProtectedRoute'
 
 function Placeholder({ title }: { title: string }) {
-  return <main className="p-6"><h1 className="text-2xl font-semibold">{title}</h1></main>
+  return <h1 className="text-2xl font-semibold text-slate-900">{title}</h1>
 }
 
 export function AppRoutes() {
@@ -15,16 +16,18 @@ export function AppRoutes() {
         <Route path="/register" element={<RegisterPage />} />
 
         <Route element={<ProtectedRoute />}>
-          <Route path="/dashboard" element={<Placeholder title="Dashboard" />} />
-          <Route path="/documents" element={<Placeholder title="Documents" />} />
-          <Route
-            path="/documents/:documentId/ask"
-            element={<Placeholder title="Ask a document" />}
-          />
-          <Route
-            path="/conversations"
-            element={<Placeholder title="Conversations" />}
-          />
+          <Route element={<AppLayout />}>
+            <Route path="/dashboard" element={<Placeholder title="Dashboard" />} />
+            <Route path="/documents" element={<Placeholder title="Documents" />} />
+            <Route
+              path="/documents/:documentId/ask"
+              element={<Placeholder title="Ask a document" />}
+            />
+            <Route
+              path="/conversations"
+              element={<Placeholder title="Conversations" />}
+            />
+          </Route>
         </Route>
 
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
